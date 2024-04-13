@@ -1,9 +1,9 @@
 # Fitness Club Management System
 
-Description
+# Description
 This project is designed to manage a fitness club's operations, including member registrations, scheduling personal training sessions, managing trainer schedules, and maintaining member health metrics and goals. It utilizes Python, PostgreSQL, and the psycopg2 library to interact with the database.
 
-Features
+# Features
 Member Registration: Register new members with their personal and health information.
 Update Member Profiles: Allows updating existing member profiles.
 Trainer Scheduling: Manage and update trainer availability.
