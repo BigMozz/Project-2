@@ -1,0 +1,170 @@
+import psycopg2
+from contextlib import closing
+
+def connect():
+    return psycopg2.connect("dbname=project user=postgres password=ARming2002 host=localhost port=1998")
+
+
+def register_user(first_name, last_name, email, goals, health_metrics):
+    """ Register a new user in the database """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO Members (FirstName, LastName, Email, Goals, HealthMetrics)
+            VALUES (%s, %s, %s, %s, %s);
+            """,
+            (first_name, last_name, email, goals, health_metrics))
+        conn.commit()
+        print("Registration successful")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+    finally:
+        if conn is not None:
+            conn.close()
+
+def update_member_profile(member_id, first_name, last_name, email, goals, health_metrics):
+    """ Update member profile information """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE Members
+            SET FirstName=%s, LastName=%s, Email=%s, Goals=%s, HealthMetrics=%s
+            WHERE MemberID=%s;
+            """,
+            (first_name, last_name, email, goals, health_metrics, member_id))
+        conn.commit()
+        print("Profile updated successfully")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+    finally:
+        if conn is not None:
+            conn.close()
+
+def display_dashboard(member_id):
+    """ Display member's dashboard with routines, achievements, and health stats """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT Goals, HealthMetrics FROM Members WHERE MemberID = %s;
+            """, (member_id,))
+        member_info = cur.fetchone()
+        print(f"Goals: {member_info[0]}, Health Metrics: {member_info[1]}")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+def schedule_session(member_id, trainer_id, time_slot, class_type):
+    """ Schedule a personal training or group fitness session """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM PersonalTrainingSessions WHERE TrainerID=%s AND TimeSlot=%s;
+            """, (trainer_id, time_slot))
+        if cur.fetchone():
+            print("Trainer not available at the selected time")
+            return
+        cur.execute("""
+            INSERT INTO PersonalTrainingSessions (MemberID, TrainerID, TimeSlot, ClassType)
+            VALUES (%s, %s, %s, %s);
+            """, (member_id, trainer_id, time_slot, class_type))
+        conn.commit()
+        print("Session scheduled successfully")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+    finally:
+        if conn is not None:
+            conn.close()
+
+def set_trainer_availability(trainer_id, available_times):
+    """ Set or update trainer availability """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE Trainers SET Availability=%s WHERE TrainerID=%s;
+            """, (available_times, trainer_id))
+        conn.commit()
+        print("Availability updated successfully")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+    finally:
+        if conn is not None:
+            conn.close()
+
+def view_member_profile(member_name):
+    """ View member profiles by name """
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        query = """
+            SELECT MemberID, FirstName, LastName, Email, Goals, HealthMetrics 
+            FROM Members
+            WHERE FirstName ILIKE %s OR LastName ILIKE %s;
+        """
+        like_pattern = f'%{member_name}%'
+        cur.execute(query, (like_pattern, like_pattern))
+        members = cur.fetchall()
+
+        # Check if any members were found
+        if not members:
+            print("No members found matching the provided name.")
+            return
+
+        # Print each member's details
+        print("Member Profiles Found:")
+        for member in members:
+            print(f"ID: {member[0]}, Name: {member[1]} {member[2]}, Email: {member[3]}, Goals: {member[4]}, Health Metrics: {member[5]}")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(f"Error while retrieving member profiles: {error}")
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def test_register_user():
+    print("Testing registration...")
+    register_user('John', 'Doe', 'john@example.com', 'Improve cardio', 'Weight: 180lbs')
+
+def test_update_member_profile():
+    update_member_profile(1, 'John', 'Doe', 'john.d@example.com', 'Improve endurance', 'Weight: 175lbs')
+    
+    # updating a non-existent member
+    update_member_profile(999, 'Fake', 'User', 'fake@example.com', 'Nothing', 'Weight: 100lbs')
+
+def test_display_dashboard():
+    display_dashboard(1)
+
+def test_schedule_session():
+
+    schedule_session(1, 1, '2024-04-20 09:00:00', 'Yoga')
+
+    schedule_session(1, 1, '2024-04-20 09:00:00', 'Pilates')
+
+def test_set_trainer_availability():
+    set_trainer_availability(1, 'Weekdays 10 am - 4 pm')
+    set_trainer_availability(1, 'Weekends 10 am - 2 pm')  # Change availability
+
+def test_view_member_profile():
+    view_member_profile('John')
+    view_member_profile('xyz')  # Non existent user
+
+def main():
+    test_register_user()
+   # test_update_member_profile()
+  #  test_display_dashboard()
+  #  test_schedule_session()
+  #  test_set_trainer_availability()
+   # test_view_member_profile()
+''
+if __name__ == "__main__":
+    main()
