@@ -5,7 +5,11 @@ This project is designed to manage a fitness club's operations, including member
 
 # Features
 Member Registration: Register new members with their personal and health information.
+
 Update Member Profiles: Allows updating existing member profiles.
+
 Trainer Scheduling: Manage and update trainer availability.
+
 Session Scheduling: Schedule personal training or group fitness sessions, ensuring no trainer is double-booked.
+
 Member Dashboard: Display member-specific information such as goals and health metrics.
